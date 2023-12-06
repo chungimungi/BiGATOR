@@ -19,8 +19,7 @@ class BiEncoder(nn.Module):
             nn.Embedding(input_size, hidden_size),
             nn.LSTM(hidden_size, hidden_size, batch_first=True),
         )
-
-        # Correct embedding dimension for non-bidirectional LSTM
+        
         self.embedding_dim = hidden_size
 
         # Self-Attention Layer
