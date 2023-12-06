@@ -9,40 +9,66 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class BiEncoder(nn.Module):
-    def __init__(
-        self, input_size, hidden_size, output_size, num_attention_heads=4
-    ):
-        super().__init__()
+    def __init__(self, input_size, hidden_size, output_size, num_attention_heads=8, dropout_rate=0.5):
+        super(BiEncoder, self).__init__()
 
-        # Encoder for text
-        self.text_encoder = nn.Sequential(
-            nn.Embedding(input_size, hidden_size),
-            nn.LSTM(hidden_size, hidden_size, batch_first=True),
-        )
-        
+        # First embedding layer
+        self.embedding1 = nn.Embedding(input_size, hidden_size)
+
+        # Second embedding layer
+        self.embedding2 = nn.Embedding(input_size, hidden_size)
+
+        # LSTM layer
+        self.lstm = nn.LSTM(hidden_size, hidden_size, batch_first=True)
+
+        # Correct embedding dimension for non-bidirectional LSTM
         self.embedding_dim = hidden_size
 
-        # Self-Attention Layer
-        self.self_attention = nn.MultiheadAttention(
-            self.embedding_dim, num_attention_heads
+        # Dropout layer
+        self.dropout = nn.Dropout(dropout_rate)
+
+        # Gating mechanism
+        self.gate = nn.Sequential(
+            nn.Linear(self.embedding_dim, 1),
+            nn.Sigmoid()
         )
+
+        # Self-Attention Layer 1
+        self.self_attention1 = nn.MultiheadAttention(self.embedding_dim, num_attention_heads)
+
+        # Self-Attention Layer 2
+        self.self_attention2 = nn.MultiheadAttention(self.embedding_dim, num_attention_heads)
 
         # Linear layer for classification
         self.fc = nn.Linear(self.embedding_dim, output_size)
 
     def forward(self, text):
-        _, (text_hidden, _) = self.text_encoder(text)
+        # Apply the first embedding layer
+        embedded_text1 = self.embedding1(text)
 
-        # Use self-attention on the text_hidden
-        text_hidden = text_hidden.permute(
-            1, 0, 2
-        )  # Change the order of dimensions
-        text_hidden, _ = self.self_attention(
-            text_hidden, text_hidden, text_hidden
-        )
-        text_hidden = text_hidden.permute(
-            1, 0, 2
-        )  # Change the order of dimensions back
+        # Apply the second embedding layer
+        embedded_text2 = self.embedding2(text)
+
+        # Sum the outputs of both embedding layers
+        embedded_text = embedded_text1 + embedded_text2
+
+        # Apply the LSTM layer
+        _, (text_hidden, _) = self.lstm(embedded_text)
+
+        # Apply dropout
+        text_hidden = self.dropout(text_hidden)
+
+        # Use gating mechanism
+        gate = self.gate(text_hidden.mean(dim=1))
+        text_hidden = text_hidden * gate
+
+        # Use self-attention (Layer 1) on the text_hidden
+        text_hidden = text_hidden.permute(1, 0, 2)  # Change the order of dimensions
+        text_hidden, _ = self.self_attention1(text_hidden, text_hidden, text_hidden)
+        text_hidden = text_hidden.permute(1, 0, 2)  # Change the order of dimensions back
+
+        # Use self-attention (Layer 2) on the text_hidden
+        text_hidden, _ = self.self_attention2(text_hidden, text_hidden, text_hidden)
 
         # Take the mean across the sequence dimension
         text_hidden = text_hidden.mean(dim=1)
