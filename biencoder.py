@@ -26,7 +26,7 @@ class BiEncoder(nn.Module):
         self.self_attention = nn.MultiheadAttention(self.embedding_dim, num_attention_heads)
 
         # Linear layer for classification
-        self.fc = nn.Linear(self.embedding_dim, output_size)  # Adjust output size
+        self.fc = nn.Linear(self.embedding_dim, output_size) 
 
     def forward(self, text):
         _, (text_hidden, _) = self.text_encoder(text)
@@ -71,6 +71,7 @@ validation_dataset = TensorDataset(validation_encodings_padded, validation_label
 # Use DataLoader with dataset as the first argument
 train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
 validation_dataloader = DataLoader(validation_dataset, batch_size=2)
+
 # Training loop
 model = BiEncoder(input_size=vocab_size, hidden_size=512, output_size=len(set(train_labels))).to(device)
 model = nn.DataParallel(model)
