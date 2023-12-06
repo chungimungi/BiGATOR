@@ -1,3 +1,2 @@
-# Attention-BiEncoders
-
-A custom 9M parameter BiEncoder evaluated and trained on the Lambada dataset.
+# Attention seeking Gated BiEncoder
+A custom Gated BiEncoder evaluated and trained on the Lambada dataset.
