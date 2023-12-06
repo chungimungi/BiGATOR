@@ -1,3 +1,3 @@
 # Attention-BiEncoders
 
-A custom BiEncoder evaluated and trained on the Lambada dataset.
+A custom 9M parameter BiEncoder evaluated and trained on the Lambada dataset.
