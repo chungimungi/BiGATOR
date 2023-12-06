@@ -1,13 +1,23 @@
-from biencoder import BiEncoder, vocab_size,train_labels,train_dataloader,validation_dataloader, validation_dataset
+import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-import torch
+
+from biencoder import (
+    BiEncoder,
+    train_dataloader,
+    train_labels,
+    validation_dataloader,
+    validation_dataset,
+    vocab_size,
+)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Training loop
-model = BiEncoder(input_size=vocab_size, hidden_size=512, output_size=len(set(train_labels))).to(device)
+model = BiEncoder(
+    embedding_dim=vocab_size, hidden_size=512, output_size=len(set(train_labels))
+).to(device)
 model = nn.DataParallel(model)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -38,9 +48,11 @@ correct_predictions = 0
 with torch.no_grad():
     for batch in tqdm(validation_dataloader, desc="Validation"):
         text, labels = batch
-        outputs = model(text).to(device)
-        predictions = torch.argmax(outputs, dim=1).to(device)
-        correct_predictions += torch.sum(predictions == labels).item().to(device)
+        outputs = model(text)
+        predictions = torch.argmax(outputs, dim=1)
+        correct_predictions += (
+            torch.sum(predictions == labels).item()
+        )
 
 accuracy = correct_predictions / len(validation_dataset)
 print(f"Accuracy: {accuracy}")
