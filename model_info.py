@@ -1,4 +1,5 @@
-from biencoder import model
 import torchinfo
+
+from biencoder import model
 
 torchinfo.summary(model)
