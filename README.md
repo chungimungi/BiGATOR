@@ -1,2 +1,2 @@
 # Attention seeking Gated BiEncoder
-A custom Gated BiEncoder evaluated and trained on multiple QA tasks.
+A custom Gated BiEncoder trained and evaluated on multiple QA tasks.
