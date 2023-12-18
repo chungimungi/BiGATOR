@@ -15,7 +15,7 @@ class BiEncoder(nn.Module):
         hidden_size,
         output_size,
         num_attention_heads=4,
-        dropout_rate=0.5,
+        dropout_rate=0.2,
     ):
         super().__init__()
 
@@ -51,7 +51,7 @@ class BiEncoder(nn.Module):
 
         # Gating mechanism
         self.gate = nn.Sequential(
-            nn.Linear(self.embedding_dim, 1), nn.Sigmoid()
+            nn.Linear(self.embedding_dim, 256), nn.Sigmoid()
         )
 
         # Self-Attention Layer 1
@@ -90,7 +90,7 @@ class BiEncoder(nn.Module):
         text_hidden = self.dropout(text_hidden)
 
         # Use gating mechanism
-        gate = self.gate(text_hidden.mean(dim=1))
+        gate = self.gate(text_hidden.mean(dim=1).unsqueeze(1))
         text_hidden = text_hidden * gate
 
         # Use self-attention (Layer 1) on the text_hidden
@@ -124,8 +124,8 @@ validation_labels = [example["domain"] for example in validation_dataset]
 
 
 # Tokenize and encode the training and validation data
-max_len = 2500
-vocab_size = 10000
+max_len = 5000
+vocab_size = 15000
 
 # Tokenize and pad the training data
 train_encodings = [
@@ -159,5 +159,5 @@ validation_dataset = TensorDataset(
     validation_encodings_padded, validation_labels
 )
 # Use DataLoader with dataset as the first argument
-train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-validation_dataloader = DataLoader(validation_dataset, batch_size=2)
+train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+validation_dataloader = DataLoader(validation_dataset, batch_size=64)
