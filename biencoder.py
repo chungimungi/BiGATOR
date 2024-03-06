@@ -8,6 +8,8 @@ from lambada_load import test_dataset, train_dataset, validation_dataset
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+import torch.nn as nn
+
 class BiEncoder(nn.Module):
     def __init__(
         self,
@@ -16,25 +18,34 @@ class BiEncoder(nn.Module):
         output_size,
         num_attention_heads=4,
         dropout_rate=0.2,
+        kernel_size=3,  # Define kernel size for convolutional layers
+        num_conv_layers=2,  # Define the number of convolutional layers
     ):
         super().__init__()
 
-        # Embedding layer
-        self.embedding1 = nn.Embedding(embedding_dim, hidden_size)
+        # Embedding layer with convolutional layers
+        self.embedding1 = nn.Sequential(
+            nn.Embedding(embedding_dim, hidden_size),
+            nn.Conv1d(hidden_size, hidden_size, kernel_size=kernel_size, padding=1),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2)
+        )
 
-        # Second embedding layer
-        self.embedding2 = nn.Embedding(embedding_dim, hidden_size)
+        # Second embedding layer with convolutional layers
+        self.embedding2 = nn.Sequential(
+            nn.Embedding(embedding_dim, hidden_size),
+            nn.Conv1d(hidden_size, hidden_size, kernel_size=kernel_size, padding=1),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2)
+        )
 
-        # Embedding layer
-        self.embedding3 = nn.Embedding(embedding_dim, hidden_size)
-
-        # Second embedding layer
-        self.embedding4 = nn.Embedding(embedding_dim, hidden_size)
+        self.embedding_dim = hidden_size
 
         # LSTM layer
         self.lstm = nn.LSTM(
             hidden_size, hidden_size, batch_first=True, bidirectional=True
         )
+
         self.lstm1 = nn.LSTM(
             hidden_size, hidden_size, batch_first=True, bidirectional=True
         )
@@ -42,9 +53,6 @@ class BiEncoder(nn.Module):
         self.lstm2 = nn.LSTM(
             hidden_size, hidden_size, batch_first=True, bidirectional=True
         )
-        
-
-        self.embedding_dim = hidden_size
 
         # Dropout layer
         self.dropout = nn.Dropout(dropout_rate)
@@ -74,17 +82,13 @@ class BiEncoder(nn.Module):
         # Apply the second embedding layer
         embedded_text2 = self.embedding2(text)
 
-        embedded_text3 = self.embedding1(text)
-
-        embedded_text4 = self.embedding2(text)
-
         # Sum the outputs of both embedding layers
-        embedded_text = embedded_text1 + embedded_text2 + embedded_text3 + embedded_text4
+        embedded_text = embedded_text1 + embedded_text2
 
         # Apply the LSTM layer
-        _, (text_hidden, _) = self.lstm(embedded_text *2)
-        _, (text_hidden, _) = self.lstm1(embedded_text * 2)
-        _, (text_hidden, _) = self.lstm2(embedded_text * 2)
+        _, (text_hidden, _) = self.lstm(embedded_text)
+        _, (text_hidden, _) = self.lstm1(embedded_text)
+        _, (text_hidden, _) = self.lstm2(embedded_text)
 
         # Apply dropout
         text_hidden = self.dropout(text_hidden)
@@ -114,7 +118,6 @@ class BiEncoder(nn.Module):
 
         output = self.fc(text_hidden)
         return output
-
 
 train_texts = [example["text"] for example in train_dataset]
 train_labels = [example["domain"] for example in train_dataset]
