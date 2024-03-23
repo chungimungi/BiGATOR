@@ -20,3 +20,7 @@
 
 - [QA Paper](https://arxiv.org/pdf/1111.4343.pdf)
 - [QA Systems](https://medium.com/lingvo-masino/question-and-answering-in-natural-language-processing-part-i-168f00291856)
+
+## Related ChatGPT Prompts
+
+- [BiEncoders in QA Systems](https://chat.openai.com/share/c5443c55-052a-4d61-a98c-e30dc8ba78dc)
