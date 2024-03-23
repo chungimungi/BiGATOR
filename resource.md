@@ -24,3 +24,4 @@
 ## Related ChatGPT Prompts
 
 - [BiEncoders in QA Systems](https://chat.openai.com/share/c5443c55-052a-4d61-a98c-e30dc8ba78dc)
+- [Gated mechanism in BiEncoders](https://chat.openai.com/share/5fd33b0a-d1fa-4dcc-9a90-1860825fa415)
